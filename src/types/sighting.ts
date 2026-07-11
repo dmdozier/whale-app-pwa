@@ -35,3 +35,17 @@ export type NewSightingInput = Pick<
   | 'locationType'
   | 'distanceEstimate'
 >
+
+/** Unified shape for rendering, whether the sighting is already synced or still local-only. */
+export interface DisplaySighting {
+  id: string
+  latitude: number
+  longitude: number
+  sightedAt: string
+  speciesName: string | null
+  notes: string | null
+  photoUrl: string | null
+  locationType: LocationType
+  distanceEstimate: DistanceEstimate
+  isPending: boolean
+}

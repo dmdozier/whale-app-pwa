@@ -14,7 +14,7 @@ the shared Supabase schema.
   offline asset caching)
 - Supabase JS client (existing project — auth, Postgres, storage)
 - IndexedDB for the offline sighting queue
-- Leaflet (or Mapbox GL JS) for the map view
+- Leaflet + react-leaflet for the map view (no API key needed)
 
 ## Status
 
@@ -22,8 +22,8 @@ the shared Supabase schema.
 - [x] Step 2 — Supabase client + auth (email/password)
 - [x] Step 3 — Offline queue (IndexedDB)
 - [x] Step 4 — Log Sighting flow (GPS, species, photo, notes)
-- [ ] Step 5 — Map view (pins, drive-time radius filter)
-- [ ] Step 6 — List view (sort, filters, photo thumbnails)
+- [x] Step 5 — Map view (pins, drive-time radius filter)
+- [x] Step 6 — List view (sort, filters, photo thumbnails)
 
 ## Getting started
 
