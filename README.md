@@ -19,13 +19,16 @@ the shared Supabase schema.
 ## Status
 
 - [x] Step 1 — Vite + React PWA scaffold (manifest, service worker, installable)
-- [ ] Step 2 — Supabase client + auth
+- [x] Step 2 — Supabase client + auth (email/password)
 - [ ] Step 3 — Offline queue (IndexedDB)
 - [ ] Step 4 — Log Sighting flow (GPS, species, photo, notes)
 - [ ] Step 5 — Map view (pins, drive-time radius filter)
 - [ ] Step 6 — List view (sort, filters, photo thumbnails)
 
 ## Getting started
+
+Copy `.env.example` to `.env.local` and fill in the Supabase project URL and
+anon/publishable key (same project as the React Native app).
 
 ```bash
 npm install
