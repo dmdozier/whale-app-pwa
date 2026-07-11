@@ -110,3 +110,132 @@ body {
   font-size: 0.85rem;
   margin: 0;
 }
+
+.log-cta {
+  padding: 1rem 2rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.queue-status {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.confirmation {
+  background: rgba(10, 110, 143, 0.1);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+}
+
+.log-form {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.log-form h2 {
+  margin: 0;
+}
+
+.log-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-align: left;
+}
+
+.log-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.log-status {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.log-error {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #d64545;
+}
+
+.log-field select,
+.log-field textarea,
+.log-field input[type='file'] {
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(10, 110, 143, 0.3);
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.log-photo-preview {
+  margin-top: 0.5rem;
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.segmented {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.segmented button {
+  flex: 1;
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(10, 110, 143, 0.3);
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.segmented button.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.log-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.log-actions button[type='submit'] {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.log-actions button[type='submit']:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.log-cancel {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid rgba(10, 110, 143, 0.3);
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+}

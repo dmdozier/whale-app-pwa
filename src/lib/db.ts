@@ -1,16 +1,21 @@
 import { openDB } from 'idb'
 import type { DBSchema, IDBPDatabase } from 'idb'
-import type { NewSightingInput, QueuedSighting } from '../types/sighting'
+import type { NewSightingInput, QueuedSighting, Species } from '../types/sighting'
 
 const DB_NAME = 'whale-sightings'
 const DB_VERSION = 1
-const STORE_NAME = 'sightings-queue'
+const QUEUE_STORE = 'sightings-queue'
+const SPECIES_STORE = 'species-cache'
 
 interface WhaleSightingsDB extends DBSchema {
   'sightings-queue': {
     key: string
     value: QueuedSighting
     indexes: { 'by-status': string; 'by-createdAt': string }
+  }
+  'species-cache': {
+    key: number
+    value: Species
   }
 }
 
@@ -20,9 +25,11 @@ function getDb() {
   if (!dbPromise) {
     dbPromise = openDB<WhaleSightingsDB>(DB_NAME, DB_VERSION, {
       upgrade(db) {
-        const store = db.createObjectStore(STORE_NAME, { keyPath: 'clientId' })
-        store.createIndex('by-status', 'status')
-        store.createIndex('by-createdAt', 'createdAt')
+        const queue = db.createObjectStore(QUEUE_STORE, { keyPath: 'clientId' })
+        queue.createIndex('by-status', 'status')
+        queue.createIndex('by-createdAt', 'createdAt')
+
+        db.createObjectStore(SPECIES_STORE, { keyPath: 'id' })
       },
     })
   }
@@ -39,13 +46,13 @@ export async function queueSighting(input: NewSightingInput): Promise<QueuedSigh
   }
 
   const db = await getDb()
-  await db.add(STORE_NAME, sighting)
+  await db.add(QUEUE_STORE, sighting)
   return sighting
 }
 
 export async function getQueuedSightings(): Promise<QueuedSighting[]> {
   const db = await getDb()
-  const all = await db.getAllFromIndex(STORE_NAME, 'by-createdAt')
+  const all = await db.getAllFromIndex(QUEUE_STORE, 'by-createdAt')
   return all.reverse()
 }
 
@@ -59,12 +66,25 @@ export async function updateQueuedSighting(
   changes: Partial<QueuedSighting>,
 ): Promise<void> {
   const db = await getDb()
-  const existing = await db.get(STORE_NAME, clientId)
+  const existing = await db.get(QUEUE_STORE, clientId)
   if (!existing) return
-  await db.put(STORE_NAME, { ...existing, ...changes })
+  await db.put(QUEUE_STORE, { ...existing, ...changes })
 }
 
 export async function deleteQueuedSighting(clientId: string): Promise<void> {
   const db = await getDb()
-  await db.delete(STORE_NAME, clientId)
+  await db.delete(QUEUE_STORE, clientId)
+}
+
+export async function cacheSpecies(species: Species[]): Promise<void> {
+  const db = await getDb()
+  const tx = db.transaction(SPECIES_STORE, 'readwrite')
+  await Promise.all(species.map((s) => tx.store.put(s)))
+  await tx.done
+}
+
+export async function getCachedSpecies(): Promise<Species[]> {
+  const db = await getDb()
+  const all = await db.getAll(SPECIES_STORE)
+  return all.sort((a, b) => a.sortOrder - b.sortOrder)
 }
