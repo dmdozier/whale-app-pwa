@@ -20,7 +20,7 @@ the shared Supabase schema.
 
 - [x] Step 1 — Vite + React PWA scaffold (manifest, service worker, installable)
 - [x] Step 2 — Supabase client + auth (email/password)
-- [ ] Step 3 — Offline queue (IndexedDB)
+- [x] Step 3 — Offline queue (IndexedDB)
 - [ ] Step 4 — Log Sighting flow (GPS, species, photo, notes)
 - [ ] Step 5 — Map view (pins, drive-time radius filter)
 - [ ] Step 6 — List view (sort, filters, photo thumbnails)
