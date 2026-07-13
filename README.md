@@ -35,6 +35,13 @@ npm install
 npm run dev
 ```
 
+The dev server runs over HTTPS with a self-signed cert (via
+`@vitejs/plugin-basic-ssl`) — Safari on iOS requires a secure context to
+grant Geolocation access, and `localhost` exceptions don't extend to a
+phone hitting your machine's LAN IP. `npm run dev` prints both a `Local`
+and a `Network` URL; open the `Network` one on your phone (same Wi-Fi),
+accept the certificate warning once, and location access will work.
+
 ## Building
 
 ```bash
