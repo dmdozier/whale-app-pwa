@@ -40,13 +40,23 @@ function RecenterOnLocation({ position }: { position: { latitude: number; longit
 
 export function MapView() {
   const { sightings, loading, error } = useSightings()
-  const { position, requestLocation } = useGeolocation()
+  const {
+    position,
+    loading: locating,
+    error: locationError,
+    requestLocation,
+  } = useGeolocation()
   const [radiusMinutes, setRadiusMinutes] = useState<number | 'all'>('all')
   const [selectedGroup, setSelectedGroup] = useState<DisplaySighting[] | null>(null)
 
   useEffect(() => {
     requestLocation()
   }, [requestLocation])
+
+  function selectRadius(minutes: number | 'all') {
+    setRadiusMinutes(minutes)
+    if (minutes !== 'all' && !position) requestLocation()
+  }
 
   const radiusMiles =
     radiusMinutes === 'all'
@@ -70,7 +80,7 @@ export function MapView() {
         <button
           type="button"
           className={radiusMinutes === 'all' ? 'active' : ''}
-          onClick={() => setRadiusMinutes('all')}
+          onClick={() => selectRadius('all')}
         >
           All
         </button>
@@ -79,12 +89,27 @@ export function MapView() {
             key={opt.minutes}
             type="button"
             className={radiusMinutes === opt.minutes ? 'active' : ''}
-            onClick={() => setRadiusMinutes(opt.minutes)}
+            onClick={() => selectRadius(opt.minutes)}
           >
             {opt.label}
           </button>
         ))}
       </div>
+
+      {radiusMinutes !== 'all' && !position && (
+        <p className="log-error">
+          {locating
+            ? 'Getting your location…'
+            : locationError
+              ? `Can't filter by distance: ${locationError}`
+              : "Can't filter by distance without your location."}{' '}
+          {!locating && (
+            <button type="button" onClick={requestLocation}>
+              Retry
+            </button>
+          )}
+        </p>
+      )}
 
       {error && <p className="log-error">Couldn't load sightings: {error}</p>}
 

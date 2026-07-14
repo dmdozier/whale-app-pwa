@@ -385,6 +385,8 @@ body {
   border-radius: 16px 16px 0 0;
   overflow-y: auto;
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+  /* Leaflet's own panes/controls sit at z-index up to 1000; this must clear all of them. */
+  z-index: 1001;
 }
 
 .drill-down-header {
@@ -485,7 +487,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  /* Must clear .drill-down (1001) too, since it can be opened from within it. */
+  z-index: 1100;
 }
 
 .photo-viewer img {
