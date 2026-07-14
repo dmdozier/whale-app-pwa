@@ -121,6 +121,13 @@ export function MapView() {
         </p>
       )}
 
+      {radiusMiles && position && (
+        <p className="queue-status">
+          Showing {filtered.length} of {sightings.length} sighting
+          {sightings.length === 1 ? '' : 's'} within {radiusMiles} mi
+        </p>
+      )}
+
       {error && <p className="log-error">Couldn't load sightings: {error}</p>}
 
       <div className="map-container-wrap">

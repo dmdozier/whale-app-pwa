@@ -4,6 +4,22 @@ import type { QueuedSighting } from '../types/sighting'
 
 const PHOTO_BUCKET = 'sighting-photos'
 
+// Supabase's own error objects (PostgrestError, StorageError) extend Error, but
+// on a network-level failure (DNS, connectivity, CORS) postgrest-js/storage-js
+// resolve with a plain { message, hint, ... } object instead of throwing an
+// Error instance — `instanceof Error` misses that case entirely and silently
+// hides the real reason. Read `.message`/`.hint` directly instead.
+function describeError(err: unknown): string {
+  if (err && typeof err === 'object') {
+    const { message, hint } = err as { message?: unknown; hint?: unknown }
+    if (typeof message === 'string' && message) {
+      return typeof hint === 'string' && hint ? `${message} (${hint})` : message
+    }
+  }
+  if (err instanceof Error) return err.message
+  return 'Unknown sync error'
+}
+
 async function uploadPhoto(userId: string, sighting: QueuedSighting): Promise<string | null> {
   if (!sighting.photo) return null
 
@@ -58,7 +74,7 @@ export async function syncPendingSightings(userId: string): Promise<{ synced: nu
       failed++
       await updateQueuedSighting(sighting.clientId, {
         status: 'error',
-        lastError: err instanceof Error ? err.message : 'Sync failed',
+        lastError: describeError(err),
       })
     }
   }
