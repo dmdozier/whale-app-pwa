@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet'
+import MarkerClusterGroup from 'react-leaflet-cluster'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import 'react-leaflet-cluster/dist/assets/MarkerCluster.css'
+import 'react-leaflet-cluster/dist/assets/MarkerCluster.Default.css'
 import { useSightings } from '../hooks/useSightings'
 import { useGeolocation } from '../hooks/useGeolocation'
 import { haversineDistanceMiles, DRIVE_TIME_OPTIONS } from '../lib/geo'
@@ -10,16 +13,23 @@ import type { DisplaySighting } from '../types/sighting'
 
 const DEFAULT_CENTER: [number, number] = [47.6062, -122.3321]
 const DEFAULT_ZOOM = 9
-const GROUP_RADIUS_MILES = 0.1
+// Sightings within this many decimal degrees (~1m) are treated as the same exact spot
+// and merged into one marker, since no amount of zooming will ever separate them.
+const EXACT_LOCATION_PRECISION = 5
 
-function groupSightings(sightings: DisplaySighting[]): DisplaySighting[][] {
-  const groups: DisplaySighting[][] = []
+function exactLocationKey(s: DisplaySighting): string {
+  return `${s.latitude.toFixed(EXACT_LOCATION_PRECISION)}_${s.longitude.toFixed(EXACT_LOCATION_PRECISION)}`
+}
+
+function groupByExactLocation(sightings: DisplaySighting[]): DisplaySighting[][] {
+  const byKey = new Map<string, DisplaySighting[]>()
   for (const s of sightings) {
-    const group = groups.find((g) => haversineDistanceMiles(g[0], s) < GROUP_RADIUS_MILES)
-    if (group) group.push(s)
-    else groups.push([s])
+    const key = exactLocationKey(s)
+    const arr = byKey.get(key) ?? []
+    arr.push(s)
+    byKey.set(key, arr)
   }
-  return groups
+  return Array.from(byKey.values())
 }
 
 function makeDivIcon(count: number) {
@@ -68,7 +78,7 @@ export function MapView() {
     return sightings.filter((s) => haversineDistanceMiles(position, s) <= radiusMiles)
   }, [sightings, radiusMiles, position])
 
-  const groups = useMemo(() => groupSightings(filtered), [filtered])
+  const groups = useMemo(() => groupByExactLocation(filtered), [filtered])
 
   const center: [number, number] = position
     ? [position.latitude, position.longitude]
@@ -127,18 +137,20 @@ export function MapView() {
               pathOptions={{ color: '#0a6e8f', fillOpacity: 0.05 }}
             />
           )}
-          {groups.map((group) => {
-            const lat = group[0].latitude
-            const lng = group[0].longitude
-            return (
-              <Marker
-                key={group[0].id}
-                position={[lat, lng]}
-                icon={makeDivIcon(group.length)}
-                eventHandlers={{ click: () => setSelectedGroup(group) }}
-              />
-            )
-          })}
+          <MarkerClusterGroup showCoverageOnHover={false} spiderfyOnMaxZoom>
+            {groups.map((group) => {
+              const lat = group[0].latitude
+              const lng = group[0].longitude
+              return (
+                <Marker
+                  key={group[0].id}
+                  position={[lat, lng]}
+                  icon={makeDivIcon(group.length)}
+                  eventHandlers={{ click: () => setSelectedGroup(group) }}
+                />
+              )
+            })}
+          </MarkerClusterGroup>
         </MapContainer>
       </div>
 

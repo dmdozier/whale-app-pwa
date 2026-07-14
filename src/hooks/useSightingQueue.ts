@@ -4,6 +4,10 @@ import { syncPendingSightings } from '../lib/sync'
 import { useOnlineStatus } from './useOnlineStatus'
 import type { NewSightingInput, QueuedSighting } from '../types/sighting'
 
+// iOS Safari's online/offline events are unreliable, especially for installed
+// PWAs, so we don't rely on connectivity-change detection alone to retry.
+const RETRY_INTERVAL_MS = 30_000
+
 export function useSightingQueue(userId: string | null) {
   const [queue, setQueue] = useState<QueuedSighting[]>([])
   const [loading, setLoading] = useState(true)
@@ -35,6 +39,15 @@ export function useSightingQueue(userId: string | null) {
     if (isOnline && userId) sync()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOnline, userId])
+
+  useEffect(() => {
+    if (!userId) return
+    const hasPending = queue.some((s) => s.status !== 'synced')
+    if (!hasPending) return
+
+    const interval = setInterval(() => sync(), RETRY_INTERVAL_MS)
+    return () => clearInterval(interval)
+  }, [userId, queue, sync])
 
   const add = useCallback(
     async (input: NewSightingInput) => {

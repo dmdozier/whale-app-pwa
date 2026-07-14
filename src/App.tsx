@@ -12,7 +12,7 @@ type Tab = 'map' | 'list'
 
 function App() {
   const { user, loading, signOut } = useAuth()
-  const { queue, syncing, isOnline, add } = useSightingQueue(user?.id ?? null)
+  const { queue, syncing, isOnline, add, sync } = useSightingQueue(user?.id ?? null)
   const [tab, setTab] = useState<Tab>('map')
   const [logging, setLogging] = useState(false)
   const [confirmation, setConfirmation] = useState<string | null>(null)
@@ -43,7 +43,8 @@ function App() {
     )
   }
 
-  const pendingCount = queue.filter((s) => s.status !== 'synced').length
+  const pendingCount = queue.length
+  const erroredSighting = queue.find((s) => s.status === 'error')
 
   return (
     <div className="app-main">
@@ -61,7 +62,16 @@ function App() {
           ? `${pendingCount} sighting${pendingCount === 1 ? '' : 's'} queued${syncing ? ' — syncing…' : ''}`
           : 'All sightings synced'}
         {!isOnline && ' (offline)'}
+        {pendingCount > 0 && !syncing && (
+          <button type="button" className="retry-sync" onClick={sync}>
+            Retry
+          </button>
+        )}
       </p>
+
+      {erroredSighting?.lastError && (
+        <p className="log-error">Sync failed: {erroredSighting.lastError}</p>
+      )}
 
       <div className="app-content">{tab === 'map' ? <MapView /> : <ListView />}</div>
 
