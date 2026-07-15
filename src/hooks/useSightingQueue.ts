@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { deleteQueuedSighting, getQueuedSightings, queueSighting } from '../lib/db'
+import { deleteQueuedSighting, getQueuedSightings, onQueueChanged, queueSighting } from '../lib/db'
 import { syncPendingSightings } from '../lib/sync'
 import { useOnlineStatus } from './useOnlineStatus'
 import type { NewSightingInput, QueuedSighting } from '../types/sighting'
@@ -33,6 +33,10 @@ export function useSightingQueue(userId: string | null) {
 
   useEffect(() => {
     refresh()
+  }, [refresh])
+
+  useEffect(() => {
+    return onQueueChanged(refresh)
   }, [refresh])
 
   useEffect(() => {

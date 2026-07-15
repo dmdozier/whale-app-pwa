@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { getQueuedSightings } from '../lib/db'
+import { getQueuedSightings, onQueueChanged } from '../lib/db'
 import { useSpecies } from './useSpecies'
 import type { DisplaySighting, LocationType, DistanceEstimate } from '../types/sighting'
 
@@ -105,6 +105,14 @@ export function useSightings() {
     refreshRemote()
     refreshPending()
   }, [refreshRemote, refreshPending])
+
+  // useSightingQueue (App.tsx) mutates the same IndexedDB table independently
+  // — without this, a sync completing there never updates this hook's own
+  // "pending" snapshot, and a successfully-synced sighting keeps showing as
+  // "syncing" here until something else forces a remount.
+  useEffect(() => {
+    return onQueueChanged(refreshPending)
+  }, [refreshPending])
 
   useEffect(() => {
     const channel = supabase
