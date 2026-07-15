@@ -316,15 +316,41 @@ body {
   position: relative;
 }
 
-.map-controls,
 .list-controls {
   padding: 0 1rem 0.5rem;
-}
-
-.list-controls {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.map-filter-group {
+  padding: 0.4rem 1rem;
+}
+
+.map-filter-group .segmented {
+  margin-top: 0.3rem;
+}
+
+.map-filter-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.map-filter-group.secondary {
+  padding-top: 0;
+}
+
+.map-filter-group.secondary .map-filter-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text);
+  opacity: 0.65;
+}
+
+.map-filter-group.secondary .segmented button {
+  padding: 0.4rem;
+  font-size: 0.85rem;
 }
 
 .list-filters {

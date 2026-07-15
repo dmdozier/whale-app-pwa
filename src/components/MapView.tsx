@@ -17,6 +17,13 @@ const DEFAULT_ZOOM = 9
 // and merged into one marker, since no amount of zooming will ever separate them.
 const EXACT_LOCATION_PRECISION = 5
 
+const RECENCY_OPTIONS = [
+  { label: 'Last Hour', hours: 1 },
+  { label: 'Last Day', hours: 24 },
+  { label: 'Last Week', hours: 24 * 7 },
+  { label: 'Last Month', hours: 24 * 30 },
+]
+
 function exactLocationKey(s: DisplaySighting): string {
   return `${s.latitude.toFixed(EXACT_LOCATION_PRECISION)}_${s.longitude.toFixed(EXACT_LOCATION_PRECISION)}`
 }
@@ -57,6 +64,7 @@ export function MapView() {
     requestLocation,
   } = useGeolocation()
   const [radiusMinutes, setRadiusMinutes] = useState<number | 'all'>('all')
+  const [recencyHours, setRecencyHours] = useState<number | 'all'>('all')
   const [selectedGroup, setSelectedGroup] = useState<DisplaySighting[] | null>(null)
 
   useEffect(() => {
@@ -74,9 +82,19 @@ export function MapView() {
       : (DRIVE_TIME_OPTIONS.find((o) => o.minutes === radiusMinutes)?.radiusMiles ?? null)
 
   const filtered = useMemo(() => {
-    if (!radiusMiles || !position) return sightings
-    return sightings.filter((s) => haversineDistanceMiles(position, s) <= radiusMiles)
-  }, [sightings, radiusMiles, position])
+    let result = sightings
+
+    if (recencyHours !== 'all') {
+      const cutoffMs = Date.now() - recencyHours * 60 * 60 * 1000
+      result = result.filter((s) => new Date(s.sightedAt).getTime() >= cutoffMs)
+    }
+
+    if (radiusMiles && position) {
+      result = result.filter((s) => haversineDistanceMiles(position, s) <= radiusMiles)
+    }
+
+    return result
+  }, [sightings, recencyHours, radiusMiles, position])
 
   const groups = useMemo(() => groupByExactLocation(filtered), [filtered])
 
@@ -86,24 +104,50 @@ export function MapView() {
 
   return (
     <div className="map-view">
-      <div className="map-controls segmented">
-        <button
-          type="button"
-          className={radiusMinutes === 'all' ? 'active' : ''}
-          onClick={() => selectRadius('all')}
-        >
-          All
-        </button>
-        {DRIVE_TIME_OPTIONS.map((opt) => (
+      <div className="map-filter-group">
+        <span className="map-filter-label">When sighted</span>
+        <div className="segmented">
           <button
-            key={opt.minutes}
             type="button"
-            className={radiusMinutes === opt.minutes ? 'active' : ''}
-            onClick={() => selectRadius(opt.minutes)}
+            className={recencyHours === 'all' ? 'active' : ''}
+            onClick={() => setRecencyHours('all')}
           >
-            {opt.label}
+            All Time
           </button>
-        ))}
+          {RECENCY_OPTIONS.map((opt) => (
+            <button
+              key={opt.hours}
+              type="button"
+              className={recencyHours === opt.hours ? 'active' : ''}
+              onClick={() => setRecencyHours(opt.hours)}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="map-filter-group secondary">
+        <span className="map-filter-label">Drive-time distance from you</span>
+        <div className="segmented">
+          <button
+            type="button"
+            className={radiusMinutes === 'all' ? 'active' : ''}
+            onClick={() => selectRadius('all')}
+          >
+            All
+          </button>
+          {DRIVE_TIME_OPTIONS.map((opt) => (
+            <button
+              key={opt.minutes}
+              type="button"
+              className={radiusMinutes === opt.minutes ? 'active' : ''}
+              onClick={() => selectRadius(opt.minutes)}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {radiusMinutes !== 'all' && !position && (
@@ -121,10 +165,10 @@ export function MapView() {
         </p>
       )}
 
-      {radiusMiles && position && (
+      {(recencyHours !== 'all' || (radiusMiles && position)) && (
         <p className="queue-status">
           Showing {filtered.length} of {sightings.length} sighting
-          {sightings.length === 1 ? '' : 's'} within {radiusMiles} mi
+          {sightings.length === 1 ? '' : 's'}
         </p>
       )}
 
