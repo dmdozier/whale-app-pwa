@@ -6,18 +6,31 @@ import type { DisplaySighting } from '../types/sighting'
 interface SightingListItemProps {
   sighting: DisplaySighting
   distanceMiles?: number
+  isSelected?: boolean
+  onSelect?: () => void
 }
 
-export function SightingListItem({ sighting, distanceMiles }: SightingListItemProps) {
+export function SightingListItem({
+  sighting,
+  distanceMiles,
+  isSelected,
+  onSelect,
+}: SightingListItemProps) {
   const [showPhoto, setShowPhoto] = useState(false)
 
   return (
-    <li className="sighting-item">
+    <li
+      className={`sighting-item${isSelected ? ' selected' : ''}${onSelect ? ' clickable' : ''}`}
+      onClick={onSelect}
+    >
       {sighting.photoUrl && (
         <button
           type="button"
           className="sighting-thumb"
-          onClick={() => setShowPhoto(true)}
+          onClick={(e) => {
+            e.stopPropagation()
+            setShowPhoto(true)
+          }}
           aria-label="View photo"
         >
           <img src={sighting.photoUrl} alt="" />

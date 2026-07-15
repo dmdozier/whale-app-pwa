@@ -5,11 +5,18 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.css'
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.Default.css'
-import { useSightings } from '../hooks/useSightings'
 import { useGeolocation } from '../hooks/useGeolocation'
 import { haversineDistanceMiles, boundingBoxForRadius, DRIVE_TIME_OPTIONS } from '../lib/geo'
 import { SightingList } from './SightingList'
 import type { DisplaySighting } from '../types/sighting'
+
+interface MapViewProps {
+  sightings: DisplaySighting[]
+  loading: boolean
+  error: string | null
+  selectedIds: string[]
+  onSelect: (ids: string[]) => void
+}
 
 const DEFAULT_CENTER: [number, number] = [47.6062, -122.3321]
 const DEFAULT_ZOOM = 9
@@ -39,10 +46,13 @@ function groupByExactLocation(sightings: DisplaySighting[]): DisplaySighting[][]
   return Array.from(byKey.values())
 }
 
-function makeDivIcon(count: number) {
+function makeDivIcon(count: number, selected: boolean) {
+  const classes = ['sighting-marker-badge']
+  if (count > 1) classes.push('multi')
+  if (selected) classes.push('selected')
   return L.divIcon({
     className: 'sighting-marker',
-    html: `<div class="sighting-marker-badge${count > 1 ? ' multi' : ''}">${count > 1 ? count : ''}</div>`,
+    html: `<div class="${classes.join(' ')}">${count > 1 ? count : ''}</div>`,
     iconSize: count > 1 ? [30, 30] : [18, 18],
   })
 }
@@ -68,20 +78,19 @@ function FitRadiusBounds({
   useEffect(() => {
     if (!position || !radiusMiles) return
     const bounds = boundingBoxForRadius(position, radiusMiles)
-    map.fitBounds(bounds, { padding: [12, 12], animate: false })
+    map.fitBounds(bounds, { padding: [4, 4], animate: false })
   }, [position, radiusMiles, map])
   return null
 }
 
-export function MapView() {
-  const { sightings, loading, error } = useSightings()
+export function MapView({ sightings, loading, error, selectedIds, onSelect }: MapViewProps) {
   const {
     position,
     loading: locating,
     error: locationError,
     requestLocation,
   } = useGeolocation()
-  const [radiusMinutes, setRadiusMinutes] = useState<number | 'all'>('all')
+  const [radiusMinutes, setRadiusMinutes] = useState<number | 'all'>(30)
   const [recencyHours, setRecencyHours] = useState<number | 'all'>('all')
   const [selectedGroup, setSelectedGroup] = useState<DisplaySighting[] | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -245,12 +254,18 @@ export function MapView() {
             {groups.map((group) => {
               const lat = group[0].latitude
               const lng = group[0].longitude
+              const isSelected = group.some((s) => selectedIds.includes(s.id))
               return (
                 <Marker
                   key={group[0].id}
                   position={[lat, lng]}
-                  icon={makeDivIcon(group.length)}
-                  eventHandlers={{ click: () => setSelectedGroup(group) }}
+                  icon={makeDivIcon(group.length, isSelected)}
+                  eventHandlers={{
+                    click: () => {
+                      setSelectedGroup(group)
+                      onSelect(group.map((s) => s.id))
+                    },
+                  }}
                 />
               )
             })}
@@ -266,7 +281,13 @@ export function MapView() {
             <span>
               {selectedGroup.length} sighting{selectedGroup.length === 1 ? '' : 's'}
             </span>
-            <button type="button" onClick={() => setSelectedGroup(null)}>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedGroup(null)
+                onSelect([])
+              }}
+            >
               Close
             </button>
           </div>

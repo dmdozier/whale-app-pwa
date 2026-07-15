@@ -4,8 +4,7 @@ import { useAuth } from './hooks/useAuth'
 import { useSightingQueue } from './hooks/useSightingQueue'
 import { AuthScreen } from './components/AuthScreen'
 import { LogSightingForm } from './components/LogSightingForm'
-import { MapView } from './components/MapView'
-import { ListView } from './components/ListView'
+import { SightingsExplorer } from './components/SightingsExplorer'
 import type { NewSightingInput } from './types/sighting'
 
 type Tab = 'map' | 'list'
@@ -83,12 +82,14 @@ function App() {
         <p className="log-error compact">Sync failed: {erroredSighting.lastError}</p>
       )}
 
-      <div className="app-content">{tab === 'map' ? <MapView /> : <ListView />}</div>
+      <div className="app-content">
+        <SightingsExplorer tab={tab} />
+      </div>
 
       <nav className="tab-bar">
         <button
           type="button"
-          className={tab === 'map' ? 'active' : ''}
+          className={`tab-toggle${tab === 'map' ? ' active' : ''}`}
           onClick={() => setTab('map')}
         >
           Map
@@ -98,7 +99,7 @@ function App() {
         </button>
         <button
           type="button"
-          className={tab === 'list' ? 'active' : ''}
+          className={`tab-toggle${tab === 'list' ? ' active' : ''}`}
           onClick={() => setTab('list')}
         >
           List

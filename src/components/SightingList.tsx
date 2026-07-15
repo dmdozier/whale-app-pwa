@@ -6,9 +6,11 @@ import type { LatLng } from '../lib/geo'
 interface SightingListProps {
   sightings: DisplaySighting[]
   userLocation?: LatLng | null
+  selectedIds?: string[]
+  onSelect?: (ids: string[]) => void
 }
 
-export function SightingList({ sightings, userLocation }: SightingListProps) {
+export function SightingList({ sightings, userLocation, selectedIds, onSelect }: SightingListProps) {
   if (sightings.length === 0) {
     return <p className="empty-state">No sightings here yet.</p>
   }
@@ -22,6 +24,8 @@ export function SightingList({ sightings, userLocation }: SightingListProps) {
           distanceMiles={
             userLocation ? haversineDistanceMiles(userLocation, sighting) : undefined
           }
+          isSelected={selectedIds?.includes(sighting.id)}
+          onSelect={onSelect ? () => onSelect([sighting.id]) : undefined}
         />
       ))}
     </ul>

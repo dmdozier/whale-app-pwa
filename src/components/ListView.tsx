@@ -1,14 +1,21 @@
 import { useMemo, useState } from 'react'
-import { useSightings } from '../hooks/useSightings'
 import { useSpecies } from '../hooks/useSpecies'
 import { useGeolocation } from '../hooks/useGeolocation'
 import { haversineDistanceMiles } from '../lib/geo'
 import { SightingList } from './SightingList'
+import type { DisplaySighting } from '../types/sighting'
 
 type SortMode = 'recent' | 'nearest'
 
-export function ListView() {
-  const { sightings, loading, error } = useSightings()
+interface ListViewProps {
+  sightings: DisplaySighting[]
+  loading: boolean
+  error: string | null
+  selectedIds: string[]
+  onSelect: (ids: string[]) => void
+}
+
+export function ListView({ sightings, loading, error, selectedIds, onSelect }: ListViewProps) {
   const species = useSpecies()
   const { position, requestLocation } = useGeolocation()
 
@@ -106,7 +113,12 @@ export function ListView() {
       {loading ? (
         <p className="empty-state">Loading sightings…</p>
       ) : (
-        <SightingList sightings={filtered} userLocation={position} />
+        <SightingList
+          sightings={filtered}
+          userLocation={position}
+          selectedIds={selectedIds}
+          onSelect={onSelect}
+        />
       )}
     </div>
   )
