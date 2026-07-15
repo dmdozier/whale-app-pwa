@@ -49,28 +49,38 @@ function App() {
   return (
     <div className="app-main">
       <header className="app-header">
-        <h1>🐋 Whale Sightings</h1>
-        <button type="button" className="sign-out" onClick={signOut}>
-          Sign out
+        <span className="app-logo" aria-label="Whale Sightings">
+          🐋
+        </span>
+
+        {pendingCount > 0 && (
+          <span className="sync-badge">
+            {pendingCount}
+            {syncing ? '…' : ''}
+            {!isOnline && ' ⚡'}
+            {!syncing && (
+              <button type="button" className="retry-sync" onClick={sync} aria-label="Retry sync">
+                ⟳
+              </button>
+            )}
+          </span>
+        )}
+
+        <button
+          type="button"
+          className="icon-button sign-out"
+          onClick={signOut}
+          title="Sign out"
+          aria-label="Sign out"
+        >
+          ⎋
         </button>
       </header>
 
-      {confirmation && <p className="confirmation">{confirmation}</p>}
-
-      <p className="queue-status">
-        {pendingCount > 0
-          ? `${pendingCount} sighting${pendingCount === 1 ? '' : 's'} queued${syncing ? ' — syncing…' : ''}`
-          : 'All sightings synced'}
-        {!isOnline && ' (offline)'}
-        {pendingCount > 0 && !syncing && (
-          <button type="button" className="retry-sync" onClick={sync}>
-            Retry
-          </button>
-        )}
-      </p>
+      {confirmation && <p className="toast">{confirmation}</p>}
 
       {erroredSighting?.lastError && (
-        <p className="log-error">Sync failed: {erroredSighting.lastError}</p>
+        <p className="log-error compact">Sync failed: {erroredSighting.lastError}</p>
       )}
 
       <div className="app-content">{tab === 'map' ? <MapView /> : <ListView />}</div>
@@ -83,11 +93,7 @@ function App() {
         >
           Map
         </button>
-        <button
-          type="button"
-          className="log-cta-tab"
-          onClick={() => setLogging(true)}
-        >
+        <button type="button" className="log-cta-tab" onClick={() => setLogging(true)}>
           I saw one
         </button>
         <button

@@ -68,7 +68,7 @@ function FitRadiusBounds({
   useEffect(() => {
     if (!position || !radiusMiles) return
     const bounds = boundingBoxForRadius(position, radiusMiles)
-    map.fitBounds(bounds, { padding: [32, 32], animate: false })
+    map.fitBounds(bounds, { padding: [12, 12], animate: false })
   }, [position, radiusMiles, map])
   return null
 }
@@ -84,6 +84,7 @@ export function MapView() {
   const [radiusMinutes, setRadiusMinutes] = useState<number | 'all'>('all')
   const [recencyHours, setRecencyHours] = useState<number | 'all'>('all')
   const [selectedGroup, setSelectedGroup] = useState<DisplaySighting[] | null>(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   useEffect(() => {
     requestLocation()
@@ -120,77 +121,110 @@ export function MapView() {
     ? [position.latitude, position.longitude]
     : DEFAULT_CENTER
 
+  const recencySummary =
+    recencyHours === 'all'
+      ? 'All time'
+      : (RECENCY_OPTIONS.find((o) => o.hours === recencyHours)?.label ?? 'All time')
+  const distanceSummary =
+    radiusMinutes === 'all'
+      ? 'All distances'
+      : (DRIVE_TIME_OPTIONS.find((o) => o.minutes === radiusMinutes)?.label ?? 'All distances')
+  const filtersActive = recencyHours !== 'all' || radiusMinutes !== 'all'
+
   return (
     <div className="map-view">
-      <div className="map-filter-group">
-        <span className="map-filter-label">When sighted</span>
-        <div className="segmented">
+      <button
+        type="button"
+        className={`filter-toggle${filtersActive ? ' active' : ''}`}
+        onClick={() => setFiltersOpen((open) => !open)}
+      >
+        <span>
+          {recencySummary} · {distanceSummary}
+        </span>
+        <span className="filter-toggle-chevron">{filtersOpen ? '▴' : '▾'}</span>
+      </button>
+
+      {filtersOpen && (
+        <>
           <button
             type="button"
-            className={recencyHours === 'all' ? 'active' : ''}
-            onClick={() => setRecencyHours('all')}
-          >
-            All Time
-          </button>
-          {RECENCY_OPTIONS.map((opt) => (
-            <button
-              key={opt.hours}
-              type="button"
-              className={recencyHours === opt.hours ? 'active' : ''}
-              onClick={() => setRecencyHours(opt.hours)}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
+            className="filter-backdrop"
+            aria-label="Close filters"
+            onClick={() => setFiltersOpen(false)}
+          />
+          <div className="filter-panel">
+            <div className="map-filter-group">
+              <span className="map-filter-label">When sighted</span>
+              <div className="segmented">
+                <button
+                  type="button"
+                  className={recencyHours === 'all' ? 'active' : ''}
+                  onClick={() => setRecencyHours('all')}
+                >
+                  All Time
+                </button>
+                {RECENCY_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.hours}
+                    type="button"
+                    className={recencyHours === opt.hours ? 'active' : ''}
+                    onClick={() => setRecencyHours(opt.hours)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-      <div className="map-filter-group secondary">
-        <span className="map-filter-label">Drive-time distance from you</span>
-        <div className="segmented">
-          <button
-            type="button"
-            className={radiusMinutes === 'all' ? 'active' : ''}
-            onClick={() => selectRadius('all')}
-          >
-            All
-          </button>
-          {DRIVE_TIME_OPTIONS.map((opt) => (
-            <button
-              key={opt.minutes}
-              type="button"
-              className={radiusMinutes === opt.minutes ? 'active' : ''}
-              onClick={() => selectRadius(opt.minutes)}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
+            <div className="map-filter-group secondary">
+              <span className="map-filter-label">Drive-time distance from you</span>
+              <div className="segmented">
+                <button
+                  type="button"
+                  className={radiusMinutes === 'all' ? 'active' : ''}
+                  onClick={() => selectRadius('all')}
+                >
+                  All
+                </button>
+                {DRIVE_TIME_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.minutes}
+                    type="button"
+                    className={radiusMinutes === opt.minutes ? 'active' : ''}
+                    onClick={() => selectRadius(opt.minutes)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-      {radiusMinutes !== 'all' && !position && (
-        <p className="log-error">
-          {locating
-            ? 'Getting your location…'
-            : locationError
-              ? `Can't filter by distance: ${locationError}`
-              : "Can't filter by distance without your location."}{' '}
-          {!locating && (
-            <button type="button" onClick={requestLocation}>
-              Retry
-            </button>
-          )}
-        </p>
+            {radiusMinutes !== 'all' && !position && (
+              <p className="log-error compact">
+                {locating
+                  ? 'Getting your location…'
+                  : locationError
+                    ? `Can't filter by distance: ${locationError}`
+                    : "Can't filter by distance without your location."}{' '}
+                {!locating && (
+                  <button type="button" onClick={requestLocation}>
+                    Retry
+                  </button>
+                )}
+              </p>
+            )}
+
+            {(recencyHours !== 'all' || (radiusMiles && position)) && (
+              <p className="filter-count">
+                Showing {filtered.length} of {sightings.length} sighting
+                {sightings.length === 1 ? '' : 's'}
+              </p>
+            )}
+          </div>
+        </>
       )}
 
-      {(recencyHours !== 'all' || (radiusMiles && position)) && (
-        <p className="queue-status">
-          Showing {filtered.length} of {sightings.length} sighting
-          {sightings.length === 1 ? '' : 's'}
-        </p>
-      )}
-
-      {error && <p className="log-error">Couldn't load sightings: {error}</p>}
+      {error && <p className="log-error compact">Couldn't load sightings: {error}</p>}
 
       <div className="map-container-wrap">
         <MapContainer center={center} zoom={DEFAULT_ZOOM} className="leaflet-container">
