@@ -18,6 +18,27 @@ export function haversineDistanceMiles(a: LatLng, b: LatLng): number {
   return 2 * EARTH_RADIUS_MILES * Math.asin(Math.sqrt(h))
 }
 
+const MILES_PER_DEGREE_LATITUDE = 69.0
+
+/**
+ * Rectangular bounds guaranteed to contain a circle of the given radius —
+ * pure math, no dependency on a Leaflet layer being attached to a map
+ * (unlike `L.Circle#getBounds()`, which needs `this._map` to be set).
+ */
+export function boundingBoxForRadius(
+  center: LatLng,
+  radiusMiles: number,
+): [[number, number], [number, number]] {
+  const dLat = radiusMiles / MILES_PER_DEGREE_LATITUDE
+  const dLng =
+    radiusMiles / (MILES_PER_DEGREE_LATITUDE * Math.cos((center.latitude * Math.PI) / 180))
+
+  return [
+    [center.latitude - dLat, center.longitude - dLng],
+    [center.latitude + dLat, center.longitude + dLng],
+  ]
+}
+
 export interface DriveTimeOption {
   label: string
   minutes: number

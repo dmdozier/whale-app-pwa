@@ -7,7 +7,7 @@ import 'react-leaflet-cluster/dist/assets/MarkerCluster.css'
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.Default.css'
 import { useSightings } from '../hooks/useSightings'
 import { useGeolocation } from '../hooks/useGeolocation'
-import { haversineDistanceMiles, DRIVE_TIME_OPTIONS } from '../lib/geo'
+import { haversineDistanceMiles, boundingBoxForRadius, DRIVE_TIME_OPTIONS } from '../lib/geo'
 import { SightingList } from './SightingList'
 import type { DisplaySighting } from '../types/sighting'
 
@@ -50,8 +50,26 @@ function makeDivIcon(count: number) {
 function RecenterOnLocation({ position }: { position: { latitude: number; longitude: number } | null }) {
   const map = useMap()
   useEffect(() => {
-    if (position) map.setView([position.latitude, position.longitude], DEFAULT_ZOOM)
+    if (position) {
+      map.setView([position.latitude, position.longitude], DEFAULT_ZOOM, { animate: false })
+    }
   }, [position, map])
+  return null
+}
+
+function FitRadiusBounds({
+  position,
+  radiusMiles,
+}: {
+  position: { latitude: number; longitude: number } | null
+  radiusMiles: number | null
+}) {
+  const map = useMap()
+  useEffect(() => {
+    if (!position || !radiusMiles) return
+    const bounds = boundingBoxForRadius(position, radiusMiles)
+    map.fitBounds(bounds, { padding: [32, 32], animate: false })
+  }, [position, radiusMiles, map])
   return null
 }
 
@@ -181,6 +199,7 @@ export function MapView() {
             url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <RecenterOnLocation position={position} />
+          <FitRadiusBounds position={position} radiusMiles={radiusMiles} />
           {radiusMiles && position && (
             <Circle
               center={[position.latitude, position.longitude]}
